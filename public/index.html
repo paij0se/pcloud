@@ -2,15 +2,29 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>paicord</title>
+    <title>paicloud</title>
+    <link
+      rel="shortcut icon"
+      href="https://media.discordapp.net/attachments/907631182240436305/946602070868385832/unknown.png"
+      type="image/x-icon"
+    />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <h1>paicord</h1>
+    <div align="center">
+      <h1>paicloud</h1>
 
-    <form action="/upload" method="post" enctype="multipart/form-data">
-      Password: <input type="text" name="password" /><br />
-      Files <input type="file" name="file" /><br /><br />
-      <input type="submit" value="Submit" />
-    </form>
+      <form action="/upload" method="post" enctype="multipart/form-data">
+        Password: <input type="text" name="password" /><br />
+        Files <input type="file" name="file" /><br /><br />
+        <input type="submit" value="Submit" />
+      </form>
+    </div>
   </body>
 </html>
