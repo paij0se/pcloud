@@ -32,7 +32,7 @@ func upload(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if file.Size > 100485760 || file.Header.Get("Content-Type") != "image/jpeg" && file.Header.Get("Content-Type") != "image/png" && file.Header.Get("Content-Type") != "video/mp4" {
+	if file.Size > 100485760 || file.Header.Get("Content-Type") != "image/jpeg" && file.Header.Get("Content-Type") != "image/png" && file.Header.Get("Content-Type") != "video/mp4" && file.Header.Get("Content-Type") != "image/gif" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid file type or size (max 100MB)")
 	}
 	src, err := file.Open()
@@ -52,6 +52,7 @@ func upload(c echo.Context) error {
 	s := strings.ReplaceAll(c.Scheme()+"://"+c.Request().Host+""+dst.Name(), "public", "")
 	json.NewEncoder(c.Response()).Encode(s)
 	return nil
+
 }
 func displayFiles(c echo.Context) error {
 	files, err := ioutil.ReadDir("public")
@@ -76,7 +77,7 @@ func main() {
 	e.GET("/f", displayFiles)
 	port, ok := os.LookupEnv("PORT")
 
-	if ok == false {
+	if !ok {
 		port = "5000"
 	}
 	fmt.Printf("server on port: %s", port)
