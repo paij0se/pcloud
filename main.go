@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -70,11 +71,28 @@ func displayFiles(c echo.Context) error {
 
 func main() {
 	e := echo.New()
+	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(1)))
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	config := middleware.RateLimiterConfig{
+		Skipper: middleware.DefaultSkipper,
+		Store: middleware.NewRateLimiterMemoryStoreWithConfig(
+			middleware.RateLimiterMemoryStoreConfig{Rate: 1, Burst: 2, ExpiresIn: 3 * time.Minute},
+		),
+		IdentifierExtractor: func(ctx echo.Context) (string, error) {
+			id := ctx.RealIP()
+			return id, nil
+		},
+		ErrorHandler: func(context echo.Context, err error) error {
+			return context.JSON(http.StatusForbidden, nil)
+		},
+		DenyHandler: func(context echo.Context, identifier string, err error) error {
+			return context.JSON(http.StatusTooManyRequests, nil)
+		},
+	}
 	e.Static("/", "public")
-	e.POST("/upload", upload)
-	e.GET("/f", displayFiles)
+	e.POST("/upload", upload, middleware.RateLimiterWithConfig(config))
+	e.GET("/f", displayFiles, middleware.RateLimiterWithConfig(config))
 	port, ok := os.LookupEnv("PORT")
 
 	if !ok {
