@@ -71,13 +71,13 @@ func displayFiles(c echo.Context) error {
 
 func main() {
 	e := echo.New()
-	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(1)))
+	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(11)))
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	config := middleware.RateLimiterConfig{
 		Skipper: middleware.DefaultSkipper,
 		Store: middleware.NewRateLimiterMemoryStoreWithConfig(
-			middleware.RateLimiterMemoryStoreConfig{Rate: 1, Burst: 2, ExpiresIn: 3 * time.Minute},
+			middleware.RateLimiterMemoryStoreConfig{Rate: 10, Burst: 30, ExpiresIn: 3 * time.Minute},
 		),
 		IdentifierExtractor: func(ctx echo.Context) (string, error) {
 			id := ctx.RealIP()
