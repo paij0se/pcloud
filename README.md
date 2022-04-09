@@ -12,6 +12,6 @@
 
 ```sh
 PASSWORD=   # I recommend a hard password (32-64 characters)
-MAX_FILE_SIZE= # The max file size on bytes for example 100485760 = 100mb
+MAX_SIZE_FILE= # The max file size on bytes for example 100485760 = 100mb
 
 ```
