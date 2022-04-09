@@ -8,33 +8,39 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
+	env "github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
+func goDotEnvVariable(key string) string {
+
+	// load .env file
+	err := env.Load(".env")
+
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
+	return os.Getenv(key)
+}
 func upload(c echo.Context) error {
-	pass, err := os.Open("password.txt")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer pass.Close()
-	b, err := ioutil.ReadAll(pass)
-	if err != nil {
-		log.Fatal(err)
-	}
 	password := c.FormValue("password")
-	if password != string(b) {
+	// My Auth XD
+	if password != goDotEnvVariable("PASSWORD") {
 		return echo.ErrUnauthorized
 	}
 	file, err := c.FormFile("file")
 	if err != nil {
 		return err
 	}
-	if file.Size > 100485760 || file.Header.Get("Content-Type") != "image/jpeg" && file.Header.Get("Content-Type") != "image/png" && file.Header.Get("Content-Type") != "video/mp4" && file.Header.Get("Content-Type") != "image/gif" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid file type or size (max 100MB)")
+	max, _ := strconv.ParseInt(os.Getenv("MAX_SIZE_FILE"), 10, 64) // Max 900mb file size
+	if file.Size > max || file.Header.Get("Content-Type") != "image/jpeg" && file.Header.Get("Content-Type") != "image/png" && file.Header.Get("Content-Type") != "video/mp4" && file.Header.Get("Content-Type") != "image/gif" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid file type or size")
 	}
 	src, err := file.Open()
 	if err != nil {
@@ -64,7 +70,14 @@ func displayFiles(c echo.Context) error {
 	}
 
 	for _, file := range files {
-		c.HTML(http.StatusOK, "<img src='"+c.Scheme()+"://"+c.Request().Host+"/"+file.Name()+"'>"+"</img>")
+		switch file.Name()[strings.LastIndex(file.Name(), ".")+1:] {
+		case "jpg", "jpeg", "png", "gif":
+			c.HTML(http.StatusOK, "<img src='"+c.Scheme()+"://"+c.Request().Host+"/"+file.Name()+"'>"+"</img>")
+		case "mp4":
+			c.HTML(http.StatusOK, "<video controls><source src='"+c.Scheme()+"://"+c.Request().Host+"/"+file.Name()+"' type='video/mp4'></video>")
+		default:
+			c.HTML(http.StatusOK, "<a href='"+c.Scheme()+"://"+c.Request().Host+"/"+file.Name()+"'>"+file.Name()+"</a>")
+		}
 	}
 	return nil
 }

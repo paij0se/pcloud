@@ -4,3 +4,4 @@
 *.jpeg
 *.gif
 .vscode
+.env
