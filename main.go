@@ -8,38 +8,29 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
-	env "github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	HerokuEchoIpDashboard "github.com/paij0se/heroku-echo-ip-dashboard/src"
+	re "github.com/paij0se/heroku-echo-ip-dashboard/src/controllers"
 )
 
-func goDotEnvVariable(key string) string {
-
-	// load .env file
-	err := env.Load(".env")
-
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
-
-	return os.Getenv(key)
-}
 func upload(c echo.Context) error {
+	re.Requester(c.Scheme() + "://" + c.Request().Host) // This is going to count all the visitors of "/"
+
 	password := c.FormValue("password")
 	// My Auth XD
-	if password != goDotEnvVariable("PASSWORD") {
+	if password != "password" {
 		return echo.ErrUnauthorized
 	}
 	file, err := c.FormFile("file")
 	if err != nil {
 		return err
 	}
-	max, _ := strconv.ParseInt(os.Getenv("MAX_SIZE_FILE"), 10, 64) // Max 900mb file size
-	if file.Size > max || file.Header.Get("Content-Type") != "image/jpeg" && file.Header.Get("Content-Type") != "image/png" && file.Header.Get("Content-Type") != "video/mp4" && file.Header.Get("Content-Type") != "image/gif" {
+	//max, _ := strconv.ParseInt(os.Getenv("MAX_SIZE_FILE"), 10, 64) // Max 900mb file size
+	if file.Size > 900485760 || file.Header.Get("Content-Type") != "image/jpeg" && file.Header.Get("Content-Type") != "image/png" && file.Header.Get("Content-Type") != "video/mp4" && file.Header.Get("Content-Type") != "image/gif" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid file type or size")
 	}
 	src, err := file.Open()
@@ -62,6 +53,7 @@ func upload(c echo.Context) error {
 
 }
 func displayFiles(c echo.Context) error {
+	re.Requester(c.Scheme() + "://" + c.Request().Host) // This is going to count all the visitors of "/"
 	files, err := ioutil.ReadDir("public")
 
 	if err != nil {
@@ -103,6 +95,11 @@ func main() {
 			return context.JSON(http.StatusTooManyRequests, nil)
 		},
 	}
+	HerokuEchoIpDashboard.HerokuEchoIpDashboard(e) // init the dashboard
+	e.GET("/", func(c echo.Context) error {
+		re.Requester(c.Scheme() + "://" + c.Request().Host) // This is going to count all the visitors of "/"
+		return c.File("public/index.html")
+	})
 	e.Static("/", "public")
 	e.POST("/upload", upload, middleware.RateLimiterWithConfig(config))
 	e.GET("/f", displayFiles, middleware.RateLimiterWithConfig(config))
